@@ -1,11 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "openlistapi"
+name = "openlist"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Python client for OpenList API"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    { name = "HisAtri", email = "sato@xms.mx" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "fsspec>=2025.10.0",
     "httpx>=0.28.1",
+    "pydantic>=2.12.5",
     "pyotp>=2.9.0",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/HisAtri/openlistapi"
