@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import TypedDict, Optional
+from typing import Optional
+
 
 class SimpleLogin(BaseModel):
     username: str = Field(..., description="用户名")
@@ -7,7 +8,8 @@ class SimpleLogin(BaseModel):
     otp_key: Optional[str] = Field(None, description="OTP密钥")
 
 
-class UserInfo(TypedDict):
+class UserInfo(BaseModel):
+    """用户信息模型"""
     id: int
     username: str
     password: str
@@ -19,7 +21,8 @@ class UserInfo(TypedDict):
     otp: bool
 
 
-class TokenPayload(TypedDict):
+class TokenPayload(BaseModel):
+    """JWT Token 载荷模型"""
     exp: int
     iat: int
     nbf: int

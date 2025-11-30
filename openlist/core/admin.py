@@ -28,7 +28,7 @@ class User:
             response_data: dict = response.json()
             if response_data["code"] != 200:
                 raise BadResponse(response_data.get("message", "Unknown error"))
-            return response_data["data"]
+            return UserInfo(**response_data["data"])
         except (KeyError, TypeError):
             raise BadResponse(response_data.get("message", "Unknown error"))
 

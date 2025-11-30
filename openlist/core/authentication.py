@@ -51,7 +51,7 @@ class Authentication:
             return
 
         token = decode_token(self.context.auth_token)
-        if time.time() > token["exp"]:
+        if time.time() > token.exp:
             return
             
         response: httpx.Response = self.context.httpx_client.get(
