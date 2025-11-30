@@ -1,5 +1,6 @@
 import httpx
 from .core.authentication import Authentication
+from .core.admin import User
 from .context import Context
 from .data_types import SimpleLogin
 
@@ -19,9 +20,12 @@ class Server:
     def __init__(self, base_url: str):
         self.context: Context = Context(base_url=base_url,
                                         auth_token=None,
-                                        httpx_client=httpx.Client(base_url=base_url, follow_redirects=True)
-                                    )
+                                        httpx_client=httpx.Client(base_url=base_url, follow_redirects=True))
         self.auth = Authentication(self.context)
+        self.user = User(self.context)
+
+    def get_token(self) -> str:
+        return self.context.auth_token
         
     def login(self, username: str, password: str, otp_key: str = None) -> "Server":
         login_elements: SimpleLogin = SimpleLogin(username=username, password=password, otp_key=otp_key)

@@ -1,8 +1,10 @@
 import httpx
 import pyotp
+import time
 from hashlib import sha256
 from ..exceptions import BadResponse, AuthenticationFailed, UnexceptedResponseCode
 from ..context import Context
+from ..utils import decode_token
 
 
 class Authentication:
@@ -42,6 +44,16 @@ class Authentication:
             raise BadResponse(response.json().get("message", "Unknown error"))
 
     def logout(self) -> None:
+        """
+        登出，使JWT失效
+        """
+        if not self.context.auth_token:
+            return
+
+        token = decode_token(self.context.auth_token)
+        if time.time() > token["exp"]:
+            return
+            
         response: httpx.Response = self.context.httpx_client.get(
             "/api/auth/logout",
             headers={"Authorization": self.context.auth_token},

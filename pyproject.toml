@@ -20,6 +20,7 @@ dependencies = [
     "fsspec>=2025.10.0",
     "httpx>=0.28.1",
     "pydantic>=2.12.5",
+    "pyjwt>=2.10.1",
     "pyotp>=2.9.0",
 ]
 

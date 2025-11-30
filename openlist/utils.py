@@ -7,10 +7,15 @@ OpenList 工具函数模块。
 import hmac
 import hashlib
 import base64
-from datetime import datetime, timezone, date
 import numbers
+
+import jwt
+
 from typing import Union, TypeAlias
 from numbers import Real
+from datetime import datetime, timezone, date
+
+from .data_types import TokenPayload
 
 
 TimeLike: TypeAlias = Union[datetime, date, str, Real]
@@ -95,3 +100,7 @@ def sign(path: str, token: str, expire: TimeLike = 0) -> str:
     sign = f"{_sign}:{expire_timestamp}"
     return sign
 
+
+def decode_token(token: str) -> TokenPayload:
+    payload = jwt.decode(token, options={"verify_signature": False})
+    return TokenPayload(**payload)
