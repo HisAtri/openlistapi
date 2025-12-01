@@ -69,7 +69,6 @@ def to_utc_timestamp(t: TimeLike) -> int:
         return int(dt.timestamp())
     raise TypeError(f"不支持的时间表示类型: {type(t)}")
 
-
 def sign(path: str, token: str, expire: TimeLike = 0) -> str:
     """生成 OpenList 资源访问签名。
 
@@ -99,7 +98,6 @@ def sign(path: str, token: str, expire: TimeLike = 0) -> str:
     _sign = base64_sign_bytes.decode('utf-8')
     sign = f"{_sign}:{expire_timestamp}"
     return sign
-
 
 def decode_token(token: str) -> TokenPayload:
     payload = jwt.decode(token, options={"verify_signature": False})

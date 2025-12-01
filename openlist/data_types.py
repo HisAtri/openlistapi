@@ -29,3 +29,9 @@ class TokenPayload(BaseModel):
     username: str
     pwd_ts: int
 
+class SSHKey(BaseModel):
+    """列出的SSH密钥对象"""
+    id: int
+    name: str
+    public_key: str
+    created_at: str

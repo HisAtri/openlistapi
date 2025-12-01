@@ -1,18 +1,18 @@
 import httpx
 from .core.authentication import Authentication
-from .core.admin import User
+from .core.admin import User, MySSHKey, UserMe
 from .context import Context
 from .data_types import SimpleLogin
 
-class Server:
+class Client:
     """
     Client实例的入点
     
     ```
-    client = Server("https://host")
+    client = Client("https://host")
     client.login("test", "test")
     # 也支持
-    # client = Server("https://host").login("test", "test")
+    # client = Client("https://host").login("test", "test")
     client.user.get_totp()
     client.file.get_file_list()
     ```
@@ -22,17 +22,17 @@ class Server:
                                         auth_token=None,
                                         httpx_client=httpx.Client(base_url=base_url, follow_redirects=True))
         self.auth = Authentication(self.context)
-        self.user = User(self.context)
+        self.user = UserMe(self.context)
 
     def get_token(self) -> str:
         return self.context.auth_token
         
-    def login(self, username: str, password: str, otp_key: str = None) -> "Server":
+    def login(self, username: str, password: str, otp_key: str = None) -> "Client":
         login_elements: SimpleLogin = SimpleLogin(username=username, password=password, otp_key=otp_key)
         self.auth.login(**login_elements.model_dump())
         return self
 
-    def logout(self) -> "Server":
+    def logout(self) -> "Client":
         self.auth.logout()
         self.context.auth_token = None
         return self
