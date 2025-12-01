@@ -10,13 +10,13 @@ class UserMe:
         self.context = context
         self.sshkey = MySSHKey(self.context)
 
-    def me(self) -> UserInfo:
+    async def me(self) -> UserInfo:
         """
         获取当前用户信息
 
         GET /api/me
         """
-        response: httpx.Response = self.context.httpx_client.get(
+        response: httpx.Response = await self.context.httpx_client.get(
             "/api/me",
             headers={"Authorization": self.context.auth_token},
         )
@@ -33,7 +33,7 @@ class UserMe:
         except (KeyError, TypeError):
             raise BadResponse(response_data.get("message", "Unknown error"))
 
-    def update(self, username: str=None, password: str=None, sso_id: str=None):
+    async def update(self, username: str=None, password: str=None, sso_id: str=None):
         """
         更新用户信息；会使JWT失效，需要重新登录
         """
@@ -42,7 +42,7 @@ class UserMe:
             "password": password or "",
             "sso_id": sso_id or "",
         }
-        response: httpx.Response = self.context.httpx_client.post(
+        response: httpx.Response = await self.context.httpx_client.post(
             "/api/me/update",
             json=payload,
             headers={"Authorization": self.context.auth_token},
@@ -60,7 +60,7 @@ class MySSHKey:
     def __init__(self, context: Context):
         self.context = context
 
-    def add(self, name: str, public_key: str) -> None:
+    async def add(self, name: str, public_key: str) -> None:
         """
         添加SSH密钥
         """
@@ -68,7 +68,7 @@ class MySSHKey:
             "name": name,
             "public_key": public_key,
         }
-        response: httpx.Response = self.context.httpx_client.post(
+        response: httpx.Response = await self.context.httpx_client.post(
             "/api/me/sshkey/add",
             json=payload,
             headers={"Authorization": self.context.auth_token},
@@ -82,14 +82,14 @@ class MySSHKey:
 
         return
 
-    def delete(self, id: int) -> None:
+    async def delete(self, id: int) -> None:
         """
         删除SSH密钥
         """
         payload = {
             "id": id,
         }
-        response: httpx.Response = self.context.httpx_client.post(
+        response: httpx.Response = await self.context.httpx_client.post(
             "/api/me/sshkey/delete",
             json=payload,
             headers={"Authorization": self.context.auth_token},
@@ -103,11 +103,11 @@ class MySSHKey:
 
         return
 
-    def list(self) -> list[SSHKey]:
+    async def list(self) -> list[SSHKey]:
         """
         获取SSH密钥列表
         """
-        response: httpx.Response = self.context.httpx_client.get(
+        response: httpx.Response = await self.context.httpx_client.get(
             "/api/me/sshkey/list",
             headers={"Authorization": self.context.auth_token},
         )
@@ -130,6 +130,3 @@ class MySSHKey:
 class Admin:
     def __init__(self, context: Context):
         self.context = context
-
-
-

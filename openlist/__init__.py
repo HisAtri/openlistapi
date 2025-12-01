@@ -1,42 +1,57 @@
 import httpx
 from .core.authentication import Authentication
-from .core.admin import User, MySSHKey, UserMe
+from .core.admin import UserMe, MySSHKey
 from .context import Context
 from .data_types import SimpleLogin
 
 class Client:
     """
-    Client实例的入点
+    Client实例的入点（异步版本）
     
-    ```
-    client = Client("https://host")
-    client.login("test", "test")
-    # 也支持
-    # client = Client("https://host").login("test", "test")
-    client.user.get_totp()
-    client.file.get_file_list()
+    ```python
+    import asyncio
+    
+    async def main():
+        client = Client("https://host")
+        await client.login("test", "test")
+        # 也支持
+        # async with Client("https://host") as client:
+        #     await client.login("test", "test")
+        user_info = await client.user.me()
+        await client.close()
+    
+    asyncio.run(main())
     ```
     """
     def __init__(self, base_url: str):
         self.context: Context = Context(base_url=base_url,
                                         auth_token=None,
-                                        httpx_client=httpx.Client(base_url=base_url, follow_redirects=True))
+                                        httpx_client=httpx.AsyncClient(base_url=base_url, follow_redirects=True))
         self.auth = Authentication(self.context)
         self.user = UserMe(self.context)
 
     def get_token(self) -> str:
         return self.context.auth_token
         
-    def login(self, username: str, password: str, otp_key: str = None) -> "Client":
+    async def login(self, username: str, password: str, otp_key: str = None) -> "Client":
         login_elements: SimpleLogin = SimpleLogin(username=username, password=password, otp_key=otp_key)
-        self.auth.login(**login_elements.model_dump())
+        await self.auth.login(**login_elements.model_dump())
         return self
 
-    def logout(self) -> "Client":
-        self.auth.logout()
+    async def logout(self) -> "Client":
+        await self.auth.logout()
         self.context.auth_token = None
         return self
 
-    def __del__(self) -> None:
-        self.logout()
-        self.context.httpx_client.close()
+    async def close(self) -> None:
+        """关闭 HTTP 客户端连接"""
+        await self.logout()
+        await self.context.httpx_client.aclose()
+
+    async def __aenter__(self) -> "Client":
+        """异步上下文管理器入口"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """异步上下文管理器退出"""
+        await self.close()

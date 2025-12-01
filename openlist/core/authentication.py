@@ -11,7 +11,7 @@ class Authentication:
     def __init__(self, context: Context):
         self.context = context
 
-    def login(self, username: str, password: str, otp_key: str = None) -> None:
+    async def login(self, username: str, password: str, otp_key: str = None) -> None:
         """
         登录并将 token 存入 context
         """
@@ -27,7 +27,7 @@ class Authentication:
             "otp_code": otp,
         }
 
-        response: httpx.Response = self.context.httpx_client.post(
+        response: httpx.Response = await self.context.httpx_client.post(
             "/api/auth/login/hash",
             json=payload,
             headers={"Content-Type": "application/json"},
@@ -43,7 +43,7 @@ class Authentication:
         except (KeyError, TypeError):
             raise BadResponse(response.json().get("message", "Unknown error"))
 
-    def logout(self) -> None:
+    async def logout(self) -> None:
         """
         登出，使JWT失效
         """
@@ -54,7 +54,7 @@ class Authentication:
         if time.time() > token.exp:
             return
             
-        response: httpx.Response = self.context.httpx_client.get(
+        response: httpx.Response = await self.context.httpx_client.get(
             "/api/auth/logout",
             headers={"Authorization": self.context.auth_token},
         )
@@ -63,4 +63,3 @@ class Authentication:
             raise AuthenticationFailed("Unauthorized")
         elif response.status_code != 200:
             raise UnexceptedResponseCode(response.status_code, response.json().get("message", "Unknown error"))
-
