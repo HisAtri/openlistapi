@@ -34,6 +34,17 @@ class Client:
         return self.context.auth_token
         
     async def login(self, username: str, password: str, otp_key: str = None) -> "Client":
+        """
+        登录
+        
+        Args:
+            username: 用户名
+            password: 密码
+            otp_key: OTP 密钥
+        
+        Returns:
+            Client: 客户端实例
+        """
         login_elements: SimpleLogin = SimpleLogin(username=username, password=password, otp_key=otp_key)
         await self.auth.login(**login_elements.model_dump())
         return self
