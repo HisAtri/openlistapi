@@ -35,3 +35,9 @@ class SSHKey(BaseModel):
     name: str
     public_key: str
     created_at: str
+
+
+class UserListResult(BaseModel):
+    """用户列表分页响应"""
+    content: list["UserInfo"]
+    total: int
