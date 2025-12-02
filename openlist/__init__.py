@@ -1,8 +1,14 @@
 import httpx
 from .core.authentication import Authentication
 from .core.admin import UserMe, MySSHKey
+from .core.file import FileSystem
 from .context import Context
-from .data_types import SimpleLogin
+from .data_types import SimpleLogin, RenameObject
+
+__all__ = [
+    "Client",
+    "RenameObject",
+]
 
 class Client:
     """
@@ -29,6 +35,7 @@ class Client:
                                         httpx_client=httpx.AsyncClient(base_url=base_url, follow_redirects=True))
         self.auth = Authentication(self.context)
         self.user = UserMe(self.context)
+        self.fs = FileSystem(self.context)
 
     def get_token(self) -> str:
         return self.context.auth_token
