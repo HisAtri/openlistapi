@@ -73,3 +73,7 @@ class Client:
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """异步上下文管理器退出"""
         await self.close()
+
+    async def __del__(self) -> None:
+        """析构函数"""
+        await self.close()
