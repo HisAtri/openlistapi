@@ -1,11 +1,36 @@
 """
 基本文件操作API
 """
+import json
 import posixpath
-from typing import Optional, Union
+from typing import (
+    Optional, 
+    Union, 
+    Iterator, 
+    AsyncIterator, 
+    Iterable,
+    AsyncIterable,
+)
+from collections.abc import Iterator as IteratorABC, AsyncIterator as AsyncIteratorABC
+from urllib.parse import quote
 from .base import BaseService
 from ..data_types import FsListResult, FsObject, RenameObject
 from ..exceptions import BadResponse
+
+# 上传数据类型：字节、同步生成器、异步生成器
+UploadData = Union[
+    bytes,
+    Iterator[bytes],
+    AsyncIterator[bytes],
+    Iterable[bytes],
+    AsyncIterable[bytes],
+]
+
+
+async def _sync_to_async_iter(sync_iter: Iterator[bytes]) -> AsyncIterator[bytes]:
+    """将同步迭代器转换为异步迭代器"""
+    for chunk in sync_iter:
+        yield chunk
 
 
 class FileSystem(BaseService):
@@ -285,3 +310,126 @@ class FileSystem(BaseService):
             "dst_dir": dst,
         }
         await self._post("/api/fs/recursive_move", json=payload)
+
+    async def upload(
+        self, 
+        path: str, 
+        data: UploadData,
+        *,
+        last_modified: Optional[int] = None,
+        overwrite: bool = False,
+        password: Optional[str] = None,
+        as_task: bool = False,
+    ) -> None:
+        """
+        上传文件（支持流式/分片上传）
+
+        Args:
+            path: 目标路径（包含目录+文件名）
+            data: 上传数据，支持以下类型：
+                - bytes: 普通字节数据
+                - Iterator[bytes]: 同步生成器（分片上传）
+                - AsyncIterator[bytes]: 异步生成器（流式上传）
+                - Iterable[bytes]: 任意可迭代字节对象
+                - AsyncIterable[bytes]: 任意异步可迭代字节对象
+            last_modified: 最后修改时间（秒时间戳）
+            overwrite: 是否覆盖已存在的文件
+            password: 受保护目录的访问密码
+            as_task: 是否作为后台任务上传
+        """
+        headers = {
+            "Content-Type": "application/octet-stream",
+            "File-Path": quote(path, safe=""),  # URL 编码
+            "Authorization": self.context.auth_token,
+        }
+        
+        if last_modified is not None:
+            headers["Last-Modified"] = str(int(last_modified))
+        if overwrite:
+            headers["Overwrite"] = "true"
+        if password is not None:
+            headers["Password"] = password
+        if as_task:
+            headers["As-Task"] = "true"
+
+        # httpx AsyncClient 不支持同步迭代器，需要转换
+        # bytes 不需要转换
+        content: Union[bytes, AsyncIterator[bytes]]
+        if isinstance(data, bytes):
+            content = data
+        elif isinstance(data, AsyncIteratorABC):
+            # 异步迭代器
+            content = data
+        elif isinstance(data, IteratorABC):
+            # 同步迭代器，转换为异步
+            content = _sync_to_async_iter(data)
+        elif hasattr(data, "__aiter__"):
+            # 异步可迭代对象
+            content = data.__aiter__()
+        elif hasattr(data, "__iter__"):
+            # 同步可迭代对象，转换为异步
+            content = _sync_to_async_iter(iter(data))
+        else:
+            content = data
+
+        response = await self.context.httpx_client.put(
+            "/api/fs/put",
+            content=content,
+            headers=headers,
+        )
+        
+        if response.status_code != 200:
+            try:
+                result = response.json()
+                message = result.get("message", "Upload failed")
+            except json.JSONDecodeError:
+                message = response.text
+            raise BadResponse(f"Upload failed with status {response.status_code}: {message}")
+        
+        result = response.json()
+        if result.get("code") != 200:
+            raise BadResponse(result.get("message", "Upload failed"))
+
+    async def upload_file(
+        self,
+        path: str,
+        file_path: str,
+        *,
+        chunk_size: int = 1024 * 1024,  # 默认 1MB 分片
+        last_modified: Optional[int] = None,
+        overwrite: bool = False,
+        password: Optional[str] = None,
+        as_task: bool = False,
+    ) -> None:
+        """
+        从本地文件上传（自动分片流式上传）
+
+        Args:
+            path: 目标路径（包含目录+文件名）
+            file_path: 本地文件路径
+            chunk_size: 分片大小（字节），默认 1MB
+            last_modified: 最后修改时间（秒时间戳），不传则使用文件修改时间
+            overwrite: 是否覆盖已存在的文件
+            password: 受保护目录的访问密码
+            as_task: 是否作为后台任务上传
+        """
+        import os
+        
+        # 获取文件修改时间
+        if last_modified is None:
+            last_modified = int(os.path.getmtime(file_path))
+        
+        def file_chunk_generator() -> Iterator[bytes]:
+            """同步分片读取文件"""
+            with open(file_path, "rb") as f:
+                while chunk := f.read(chunk_size):
+                    yield chunk
+        
+        await self.upload(
+            path,
+            file_chunk_generator(),
+            last_modified=last_modified,
+            overwrite=overwrite,
+            password=password,
+            as_task=as_task,
+        )

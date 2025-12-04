@@ -91,7 +91,6 @@ class BaseService(ABC):
         params: Optional[dict] = None,
         require_auth: bool = True,
     ) -> dict:
-        """GET 请求的便捷方法"""
         return await self._request("GET", endpoint, params=params, require_auth=require_auth)
     
     async def _post(
@@ -100,6 +99,4 @@ class BaseService(ABC):
         json: Optional[dict] = None,
         require_auth: bool = True,
     ) -> dict:
-        """POST 请求的便捷方法"""
         return await self._request("POST", endpoint, json=json, require_auth=require_auth)
-
