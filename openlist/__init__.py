@@ -4,6 +4,7 @@ from .core.admin import UserMe, MySSHKey
 from .core.file import FileSystem
 from .context import Context
 from .data_types import SimpleLogin, RenameObject
+import asyncio
 
 __all__ = [
     "Client",
@@ -74,6 +75,6 @@ class Client:
         """异步上下文管理器退出"""
         await self.close()
 
-    async def __del__(self) -> None:
+    def __del__(self) -> None:
         """析构函数"""
-        await self.close()
+        asyncio.create_task(self.close())
