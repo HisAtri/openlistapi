@@ -35,7 +35,6 @@ async def _sync_to_async_iter(sync_iter: Iterator[bytes]) -> AsyncIterator[bytes
 
 class FileSystem(BaseService):
     """文件系统操作"""
-
     async def listdir(
         self,
         path: str = "/",
@@ -356,19 +355,19 @@ class FileSystem(BaseService):
         # bytes 不需要转换
         content: Union[bytes, AsyncIterator[bytes]]
         if isinstance(data, bytes):
-            content = data
+            content: bytes = data
         elif isinstance(data, AsyncIteratorABC):
             # 异步迭代器
-            content = data
+            content: AsyncIterator[bytes] = data
         elif isinstance(data, IteratorABC):
             # 同步迭代器，转换为异步
-            content = _sync_to_async_iter(data)
+            content: AsyncIterator[bytes] = _sync_to_async_iter(data)
         elif hasattr(data, "__aiter__"):
             # 异步可迭代对象
-            content = data.__aiter__()
+            content: AsyncIterator[bytes] = data.__aiter__()
         elif hasattr(data, "__iter__"):
             # 同步可迭代对象，转换为异步
-            content = _sync_to_async_iter(iter(data))
+            content: AsyncIterator[bytes] = _sync_to_async_iter(iter(data))
         else:
             content = data
 
