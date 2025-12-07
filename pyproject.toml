@@ -19,9 +19,12 @@ classifiers = [
 dependencies = [
     "fsspec>=2025.10.0",
     "httpx>=0.28.1",
+    "prompt-toolkit>=3.0.52",
     "pydantic>=2.12.5",
     "pyjwt>=2.10.1",
     "pyotp>=2.9.0",
+    "rich>=14.2.0",
+    "typer>=0.20.0",
 ]
 
 [project.urls]

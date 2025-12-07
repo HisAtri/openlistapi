@@ -69,7 +69,7 @@ class FileSystem(BaseService):
         response = await self._post("/api/fs/list", json=payload)
         data = response.get("data", {})
 
-        content = [FsObject(**item) for item in data.get("content", [])]
+        content = [FsObject(**item) for item in data.get("content", [])] if data.get("content") else []
 
         return FsListResult(
             content=content,

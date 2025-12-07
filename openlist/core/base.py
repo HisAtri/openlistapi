@@ -6,7 +6,7 @@ from typing import Optional, Any
 import httpx
 
 from ..context import Context
-from ..exceptions import BadResponse, AuthenticationFailed, UnexceptedResponseCode
+from ..exceptions import BadResponse, AuthenticationFailed, UnexceptedResponseCode, NotFound
 
 
 class BaseService(ABC):
@@ -67,6 +67,8 @@ class BaseService(ABC):
             raise AuthenticationFailed("Unauthorized")
         elif response.status_code == 403:
             raise AuthenticationFailed(response.json().get("message", "Forbidden"))
+        elif response.status_code == 404:
+            raise NotFound(response.json().get("message", "Not Found"))
         elif response.status_code not in expected_codes:
             raise UnexceptedResponseCode(
                 response.status_code,

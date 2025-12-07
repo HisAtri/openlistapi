@@ -1,6 +1,6 @@
 # OpenList API
 
-OpenList API 的 Python 异步客户端，提供完整的文件管理、用户管理和认证功能。
+OpenList API 的 Python 客户端。
 
 ## 特性
 

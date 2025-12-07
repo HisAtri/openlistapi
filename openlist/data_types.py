@@ -53,7 +53,7 @@ class StorageDetails(BaseModel):
 
 class FsObject(BaseModel):
     """文件系统对象（文件或目录）"""
-    id: str = Field(default="", description="对象 ID（本地存储可能为空）")
+    id: str = Field(default="", description="对象 ID")
     path: str = Field(..., description="完整系统路径")
     name: str = Field(..., description="文件或目录名称")
     size: int = Field(default=0, description="文件大小（字节），目录为 0")

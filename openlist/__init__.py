@@ -73,14 +73,22 @@ class Client:
     async def logout(self) -> "Client":
         # 停止自动刷新任务
         self._stop_auto_refresh()
+        if self._refresh_task and not self._refresh_task.done():
+            try:
+                await asyncio.wait_for(self._refresh_task, timeout=1.0)
+            except (asyncio.CancelledError, asyncio.TimeoutError):
+                pass
+            except Exception:
+                pass
         await self.auth.logout()
         self.context.auth_token = None
         return self
 
     async def close(self) -> None:
         """关闭 HTTP 客户端连接"""
-        self._stop_auto_refresh()
+        # 登出
         await self.logout()
+        # 关闭 HTTP 客户端
         await self.context.httpx_client.aclose()
 
     def _start_auto_refresh(self) -> None:

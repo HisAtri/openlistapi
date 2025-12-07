@@ -9,3 +9,7 @@ class AuthenticationFailed(Exception):
 class UnexceptedResponseCode(Exception):
     def __init__(self, response_code: int, message: str=""):
         super().__init__(f"Unexpected response code: {response_code} {message}")
+
+class NotFound(Exception):
+    def __init__(self, message: str):
+        super().__init__(f"Not found: {message}")
