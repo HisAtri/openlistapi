@@ -74,5 +74,4 @@ def rm(path: Annotated[str, typer.Argument(help="要删除的文件或目录路�
     except NotFound as e:
         logger.error(f"文件或目录不存在: {path}")
         return
-    console.print(f"[green]已删除文件或目录: {path}[/green]")
-        
+    console.print(f"[green]已删除: {path}[/green]")

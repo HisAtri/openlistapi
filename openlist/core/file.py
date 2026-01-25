@@ -123,7 +123,7 @@ class FileSystem(BaseService):
         """
         if names:
             dir_path = path
-            name_list = list(names)
+            name_list = list[str](names)
         else:
             dir_path = posixpath.dirname(path)
             name_list = [posixpath.basename(path)]
