@@ -4,13 +4,23 @@ import asyncio
 import jwt
 from .core.authentication import Authentication
 from .core.admin import UserMe, MySSHKey
-from .core.file import FileSystem
+from .core.file import AsyncFileSystem, SyncFileSystem, RemotePath, SyncRemotePath
 from .context import Context
-from .data_types import SimpleLogin, RenameObject
+from .data_types import SimpleLogin
+from .models.file import RenameItem, FileInfo, DirectoryListing, UploadOptions
 
 __all__ = [
     "Client",
-    "RenameObject",
+    # 文件系统
+    "AsyncFileSystem",
+    "SyncFileSystem", 
+    "RemotePath",
+    "SyncRemotePath",
+    # 模型
+    "RenameItem",
+    "FileInfo",
+    "DirectoryListing",
+    "UploadOptions",
 ]
 
 class Client:
@@ -38,10 +48,22 @@ class Client:
                                         httpx_client=httpx.AsyncClient(base_url=base_url, follow_redirects=True))
         self.auth = Authentication(self.context)
         self.user = UserMe(self.context)
-        self.fs = FileSystem(self.context)
+        self.fs = AsyncFileSystem(self.context)
         self._auto_refresh = auto_refresh
         self._refresh_task: asyncio.Task = None
         self._stop_refresh = asyncio.Event()
+    
+    def path(self, path: str = "/") -> RemotePath:
+        """
+        创建远程路径对象
+        
+        Args:
+            path: 路径字符串
+            
+        Returns:
+            RemotePath 对象，用于 pathlib 风格的文件操作
+        """
+        return RemotePath(self.fs, path)
 
     def get_token(self) -> str:
         return self.context.auth_token

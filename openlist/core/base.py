@@ -2,11 +2,15 @@
 服务基类，封装 context 和通用 HTTP 请求逻辑
 """
 from abc import ABC
-from typing import Optional, Any
 import httpx
 
 from ..context import Context
-from ..exceptions import BadResponse, AuthenticationFailed, UnexceptedResponseCode, NotFound
+from ..exceptions import (
+    NetworkError,
+    AuthenticationError,
+    UnexpectedResponseError,
+    FileNotFoundError,
+)
 
 
 class BaseService(ABC):
@@ -23,8 +27,8 @@ class BaseService(ABC):
         self,
         method: str,
         endpoint: str,
-        json: Optional[dict] = None,
-        params: Optional[dict] = None,
+        json: dict | None = None,
+        params: dict | None = None,
         require_auth: bool = True,
         expected_codes: tuple[int, ...] = (200,),
     ) -> dict:
@@ -43,9 +47,9 @@ class BaseService(ABC):
             响应的 JSON 数据
             
         Raises:
-            AuthenticationFailed: 认证失败 (401/403)
-            UnexceptedResponseCode: 非预期的状态码
-            BadResponse: API 返回的 code 不是 200
+            AuthenticationError: 认证失败 (401/403)
+            UnexpectedResponseError: 非预期的状态码
+            NetworkError: API 返回的 code 不是 200
         """
         headers = {}
         if require_auth and self.context.auth_token:
@@ -64,13 +68,13 @@ class BaseService(ABC):
         
         # 处理 HTTP 状态码错误
         if response.status_code == 401:
-            raise AuthenticationFailed("Unauthorized")
+            raise AuthenticationError("Unauthorized")
         elif response.status_code == 403:
-            raise AuthenticationFailed(response.json().get("message", "Forbidden"))
+            raise AuthenticationError(response.json().get("message", "Forbidden"))
         elif response.status_code == 404:
-            raise NotFound(response.json().get("message", "Not Found"))
+            raise FileNotFoundError("", response.json().get("message", "Not Found"))
         elif response.status_code not in expected_codes:
-            raise UnexceptedResponseCode(
+            raise UnexpectedResponseError(
                 response.status_code,
                 response.json().get("message", "Unknown error")
             )
@@ -79,18 +83,18 @@ class BaseService(ABC):
         try:
             data = response.json()
         except Exception:
-            raise BadResponse("Invalid JSON response")
+            raise NetworkError("Invalid JSON response")
         
         # 检查业务状态码
         if data.get("code") != 200:
-            raise BadResponse(data.get("message", "Unknown error"))
+            raise NetworkError(data.get("message", "Unknown error"))
         
         return data
     
     async def _get(
         self,
         endpoint: str,
-        params: Optional[dict] = None,
+        params: dict | None = None,
         require_auth: bool = True,
     ) -> dict:
         return await self._request("GET", endpoint, params=params, require_auth=require_auth)
@@ -98,7 +102,7 @@ class BaseService(ABC):
     async def _post(
         self,
         endpoint: str,
-        json: Optional[dict] = None,
+        json: dict | None = None,
         require_auth: bool = True,
     ) -> dict:
         return await self._request("POST", endpoint, json=json, require_auth=require_auth)

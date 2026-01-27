@@ -9,7 +9,7 @@ import pyotp
 
 from .base import BaseService
 from ..context import Context
-from ..exceptions import AuthenticationFailed, UnexceptedResponseCode, BadResponse
+from ..exceptions import AuthenticationError, UnexpectedResponseError, NetworkError
 from ..utils import decode_token
 
 
@@ -45,9 +45,9 @@ class Authentication(BaseService):
         )
         
         if response.status_code == 403:
-            raise AuthenticationFailed(response.json().get("message", "Unknown error"))
+            raise AuthenticationError(response.json().get("message", "Unknown error"))
         elif response.status_code != 200:
-            raise UnexceptedResponseCode(
+            raise UnexpectedResponseError(
                 response.status_code, 
                 response.json().get("message", "Unknown error")
             )
@@ -55,7 +55,7 @@ class Authentication(BaseService):
         try:
             self.context.auth_token = response.json()["data"]["token"]
         except (KeyError, TypeError):
-            raise BadResponse(response.json().get("message", "Unknown error"))
+            raise NetworkError(response.json().get("message", "Unknown error"))
 
     async def logout(self) -> None:
         """

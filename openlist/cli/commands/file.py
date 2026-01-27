@@ -1,11 +1,8 @@
 import typer
 import posixpath
-from typing import Optional
 from typing_extensions import Annotated
-from . import Client, logger, context, run_async, get_event_loop, registry, console
-from ...exceptions import NotFound
-
-from pathlib import Path
+from . import logger, context, run_async, registry, console
+from ...exceptions import FileNotFoundError
 
 fs_general_app: typer.Typer = typer.Typer(help="文件系统通用操作")
 
@@ -37,7 +34,11 @@ def cd(path: Annotated[str, typer.Argument(help="要切换的目录路径")]):
 
     # 规范化路径
     new_path = normalize_path(current_path, path)
-    path_info = run_async(context.client.fs.info(new_path))
+    try:
+        path_info = run_async(context.client.fs.stat(new_path))
+    except FileNotFoundError:
+        logger.error(f"路径不存在: {new_path}")
+        return
     if not path_info.is_dir:
         logger.error(f"路径不是目录: {new_path}")
         return
@@ -53,11 +54,15 @@ def ls(path: Annotated[str, typer.Argument(help="要列出的目录路径")] = N
         work_path = normalize_path(current_path, path)
     else:
         work_path = current_path
-    files = run_async(context.client.fs.listdir(work_path))
-    if not files.content:
+    try:
+        files = run_async(context.client.fs.listdir(work_path))
+    except FileNotFoundError:
+        logger.error(f"路径不存在: {work_path}")
+        return
+    if not files:
         console.print("[cyan]-[/cyan]")
         return
-    for file in files.content:
+    for file in files:
         name = file.name
         size = file.size
         proper = "d" if file.is_dir else "-"
@@ -71,7 +76,7 @@ def rm(path: Annotated[str, typer.Argument(help="要删除的文件或目录路�
     path = normalize_path(current_path, path)
     try:
         run_async(context.client.fs.remove(path))
-    except NotFound as e:
+    except FileNotFoundError:
         logger.error(f"文件或目录不存在: {path}")
         return
     console.print(f"[green]已删除: {path}[/green]")
