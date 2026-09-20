@@ -60,23 +60,23 @@ class SyncFileSystem:
     提供与 AsyncFileSystem 相同的 API，但所有方法都是同步的。
     适用于不需要异步的场景。
     
-    Example:
-        with OpenListSync(...) as client:
-            fs = client.fs
-            
-            # 列出目录
-            files = fs.listdir("/data")
-            
-            # 检查文件
-            if fs.exists("/data/file.txt"):
-                info = fs.stat("/data/file.txt")
-                print(f"Size: {info.size}")
-            
-            # 创建目录
-            fs.mkdir("/data/new_folder", exist_ok=True)
-            
-            # 上传文件
-            fs.write_bytes("/data/hello.txt", b"Hello!")
+    示例::
+
+        fs = SyncFileSystem(context)
+
+        # 列出目录
+        files = fs.listdir("/data")
+
+        # 检查文件
+        if fs.exists("/data/file.txt"):
+            info = fs.stat("/data/file.txt")
+            print(f"Size: {info.size}")
+
+        # 创建目录
+        fs.mkdir("/data/new_folder", exist_ok=True)
+
+        # 上传文件
+        fs.write_bytes("/data/hello.txt", b"Hello!")
     """
     
     def __init__(self, context: Context):

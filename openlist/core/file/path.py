@@ -20,35 +20,26 @@ class RemotePath:
     提供面向对象的文件操作接口。路径操作（如 parent、name）是纯本地计算，
     不涉及网络请求；文件操作（如 exists、mkdir）会触发 API 调用。
     
-    支持异步和同步两种使用方式：
-    - 使用 AsyncFileSystem 时，文件操作方法返回协程
-    - 使用 SyncFileSystem 时，文件操作方法直接返回结果
+    使用 ``AsyncFileSystem`` 时，文件操作方法返回协程。
     
-    Example (异步):
-        async with OpenList(...) as client:
+    示例::
+
+        async with Client("https://host") as client:
             root = client.path("/data")
-            
+
             # 路径操作 (不涉及网络)
             child = root / "subfolder" / "file.txt"
             print(child.name)  # "file.txt"
             print(child.parent)  # RemotePath("/data/subfolder")
-            
+
             # 文件操作 (网络请求)
             if await child.exists():
                 info = await child.stat()
                 print(f"Size: {info.size}")
-            
+
             # 遍历目录
             async for item in root.iterdir():
                 print(item.name)
-    
-    Example (同步):
-        with OpenListSync(...) as client:
-            root = client.path("/data")
-            
-            if root.exists():
-                for item in root.iterdir():
-                    print(item.name)
     """
     
     __slots__ = ("_fs", "_path", "_is_async")

@@ -24,23 +24,13 @@ __all__ = [
 ]
 
 class Client:
-    """
-    Client实例的入点（异步版本）
-    
-    ```python
-    import asyncio
-    
-    async def main():
-        client = Client("https://host")
-        await client.login("test", "test")
-        # 也支持
-        # async with Client("https://host") as client:
-        #     await client.login("test", "test")
-        user_info = await client.user.me()
-        await client.close()
-    
-    asyncio.run(main())
-    ```
+    """Client 实例的入口（异步版本）。
+
+    示例::
+
+        async with Client("https://host") as client:
+            await client.login("test", "test")
+            user_info = await client.user.me()
     """
     def __init__(self, base_url: str, auto_refresh: bool = True):
         self.context: Context = Context(base_url=base_url,

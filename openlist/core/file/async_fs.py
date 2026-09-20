@@ -24,21 +24,22 @@ class AsyncFileSystem:
     提供类似标准库 os/shutil 的语义清晰的文件操作接口。
     所有方法都是异步的 (async/await)。
     
-    Example:
-        async with OpenList(...) as client:
+    示例::
+
+        async with Client("https://host") as client:
             fs = client.fs
-            
+
             # 列出目录
             files = await fs.listdir("/data")
-            
+
             # 检查文件
             if await fs.exists("/data/file.txt"):
                 info = await fs.stat("/data/file.txt")
                 print(f"Size: {info.size}")
-            
+
             # 创建目录
             await fs.mkdir("/data/new_folder", exist_ok=True)
-            
+
             # 上传文件
             await fs.write_bytes("/data/hello.txt", b"Hello!")
     """
