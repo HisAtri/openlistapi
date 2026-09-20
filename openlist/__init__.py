@@ -42,10 +42,10 @@ class Client:
     asyncio.run(main())
     ```
     """
-    def __init__(self, base_url: str, auto_refresh: bool = True):
+    def __init__(self, base_url: str, auto_refresh: bool = True, timeout=None):
         self.context: Context = Context(base_url=base_url,
                                         auth_token=None,
-                                        httpx_client=httpx.AsyncClient(base_url=base_url, follow_redirects=True))
+                                        httpx_client=httpx.AsyncClient(base_url=base_url, follow_redirects=True, timeout=timeout))
         self.auth = Authentication(self.context)
         self.user = UserMe(self.context)
         self.fs = AsyncFileSystem(self.context)
