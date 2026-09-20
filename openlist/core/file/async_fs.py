@@ -6,7 +6,7 @@ import posixpath
 from typing import AsyncIterator, Iterator
 
 from ...context import Context
-from ...exceptions import FileExistsError, FileNotFoundError, IsADirectoryError
+from ...exceptions import FileExistsError, FileNotFoundError, IsADirectoryError, FileSystemError
 from ...models.file import (
     DirectoryListing,
     FileInfo,
@@ -282,11 +282,15 @@ class AsyncFileSystem:
         """
         删除文件
         
-        与 remove() 功能相同，命名与 pathlib.Path.unlink() 一致。
+        命名与 pathlib.Path.unlink() 一致。
+        只接受文件类型，如果传入的目标是目录，则抛出错误。
         
         Args:
             path: 文件路径
         """
+        info: FileInfo = await self.stat(path)
+        if info.is_dir:
+            raise IsADirectoryError(path=path)
         await self.remove(path)
     
     async def rmdir(
@@ -294,13 +298,14 @@ class AsyncFileSystem:
         path: str,
     ) -> None:
         """
-        删除目录
-        
-        与 remove() 功能相同，命名与 os.rmdir() 一致。
+        删除空目录
+        命名与 os.rmdir() 一致。
         
         Args:
             path: 目录路径
         """
+        if (await self.listdir(path)):
+            raise FileSystemError(path=path, message="Not an empty directory")
         await self.remove(path)
     
     async def remove_many(

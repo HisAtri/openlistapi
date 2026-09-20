@@ -15,6 +15,7 @@ from ...exceptions import (
     FileExistsError,
     FileNotFoundError,
     FileSystemError,
+    NotADirectoryError,
     NetworkError,
     PermissionDeniedError,
     UnexpectedResponseError,
@@ -30,6 +31,11 @@ def _map_error_to_exception(
     将 API 错误码/消息映射为对应的异常类型
     """
     msg_lower = message.lower()
+
+    # 服务端在对文件执行目录操作时返回的业务错误，例如
+    # "failed get objs: not a folder"。
+    if "not a folder" in msg_lower or "not a directory" in msg_lower:
+        return NotADirectoryError(path or "", message)
     
     # 文件不存在
     if code == 404 or "not found" in msg_lower or "not exist" in msg_lower:
